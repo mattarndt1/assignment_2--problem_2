@@ -1,35 +1,63 @@
- require([
-        "esri/Map",
-        "esri/views/MapView",
-        "esri/layers/FeatureLayer"
-      ], function (Map, MapView, FeatureLayer) {
-        var map = new Map({
-          basemap: "hybrid"
+    require([
+      "esri/Map",
+      "esri/layers/CSVLayer",
+      "esri/views/MapView",
+      "esri/config",
+      "esri/core/urlUtils",
+      "dojo/domReady!"
+    ], function(
+      Map,
+      CSVLayer,
+      MapView,
+      esriConfig,
+      urlUtils
+    ) {
+
+      // If CSV files are not on the same domain as your website, a CORS enabled server
+      // or a proxy is required.
+     var url = "https://raw.githubusercontent.com/gbrunner/Advanced_Python_for_GIS_and_RS/master/Week%202/stl_crime_wgs_84.csv";
+     esriConfig.request.corsEnabledServers.push('https://rawgit.com');
+
+      // Paste the url into a browser's address bar to download and view the attributes
+      // in the CSV file. These attributes include:
+      // * mag - magnitude
+      // * type - earthquake or other event such as nuclear test
+      // * place - location of the event
+      // * time - the time of the event
+
+        const template = {
+          title: "Earthquake Info",
+          content: "Magnitude {mag} {type} hit {place} on {time}."
+        };
+
+        const csvLayer = new CSVLayer({
+          url: url,
+          copyright: "USGS Earthquakes",
+          popupTemplate: template
         });
 
-        var view = new MapView({
-          container: "viewDiv",
-          map: map,
+        var symbol = {
+          type: "simple-marker", 
+          color:"gray",
+          outline:"black",
+          size: "5px"
+        };
 
-          extent: {
-            // autocasts as new Extent()
-            xmin: -10366387,
-            ymin: 4902434,
-            xmax: -10356735,
-            ymax: 4919960,
-            spatialReference: 102100
-          }
-        });
+      csvLayer.renderer = {
+        type: "simple", // autocasts as new SimpleRenderer()
+        symbol: symbol
+      };
 
-        /********************
-         * Add feature layer
-         ********************/
-
-        var featureLayer1 = new FeatureLayer({     url:"https://services2.arcgis.com/bB9Y1bGKerz1PTl5/arcgis/rest/services/Commission_prop_footprint/FeatureServer"});
-   
-        map.add(featureLayer1);
-   
-   var featureLayer2 = new FeatureLayer({     url:"https://services2.arcgis.com/bB9Y1bGKerz1PTl5/arcgis/rest/services/Normal_Pool/FeatureServer"});
-   
-        map.add(featureLayer2);
+      var map = new Map({
+        basemap: "gray",
+        layers: [csvLayer]
       });
+
+      var view = new MapView({
+        container: "viewDiv",
+        center: [-90.25, 38.64],
+        zoom: 11,
+        map: map
+      });
+
+    });
